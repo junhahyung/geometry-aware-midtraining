@@ -11,7 +11,7 @@
 <body>
 
 <div class="wip-banner">
-  <strong>Work in progress</strong> — this page is under construction. Paper, code, and models are not yet released.
+  <strong>Work in progress.</strong> This page is under construction. Paper, code, and models are not yet released.
 </div>
 
 <header class="hero">
@@ -44,7 +44,7 @@
         <b>Unified action, frame, and depth prediction.</b> Both the conditioning subsequence <em>s</em> and the target
         subsequence <em>s&prime;</em> are augmented with per-pixel depth maps, treated as pseudo-RGB and encoded by the
         same VAE. The model jointly denoises the action chunk <b>a</b>, future proprioception, future RGB <em>and
-        depth</em> frames, and the value <em>V(s&prime;)</em> — forcing the shared representation to encode 3D geometry.
+        depth</em> frames, and the value <em>V(s&prime;)</em>, forcing the shared representation to encode 3D geometry.
       </figcaption>
     </figure>
   </div>
@@ -56,7 +56,7 @@
       policies are <em class="term">reactive</em> and carry no explicit model of how the world responds. World-action
       models instead couple action selection with a predictive model of physics, letting the robot imagine the outcome
       of an action before executing it. Recent video-based world-action models, however, predict RGB futures only, so
-      their learned representation captures 3D geometry only implicitly and imperfectly — a weak inductive bias for
+      their learned representation captures 3D geometry only implicitly and imperfectly, a weak inductive bias for
       contact-rich manipulation.
     </p>
     <p>
@@ -69,7 +69,7 @@
     </p>
     <p>
       Depth is treated as pseudo-RGB and reuses the existing video VAE, so <em class="term">no architectural change is
-      required</em>, and at inference the depth slots can be fed as blank placeholders — the policy needs no depth
+      required</em>, and at inference the depth slots can be fed as blank placeholders, so the policy needs no depth
       sensor and the gain is a pure representation-level effect. On 24 RoboCasa manipulation tasks, depth co-training
       alone (without mid-training) raises mean success from 60.8% to 69.0% (+8.2 points). Because 3D-awareness is a
       property of the shared representation, it can be acquired from abundant, cheap, non-expert video with depth:
@@ -125,7 +125,7 @@
     <p>
       We then convert the geometry-enhanced video model into a world-action model: we add the action, the proprioceptive
       state, and the value to its prediction target and fine-tune on the target tasks. The per-step state grows from 11
-      to 17 latent slots — six <em class="term">new</em> depth slots carry three current-frame and three future-frame
+      to 17 latent slots: six <em class="term">new</em> depth slots carry three current-frame and three future-frame
       depth maps (one per camera). The depth slots are <em class="term">denoised</em>, not merely conditioned on, so
       geometry becomes a property of the shared representation rather than an auxiliary output. At inference the depth
       slots can be fed as blank placeholders, so the policy incurs no dependence on a depth sensor.
@@ -148,7 +148,7 @@
       We evaluate on 24 RoboCasa manipulation tasks spanning pick-and-place, drawers, doors, faucets, stoves, microwaves,
       and coffee preparation, each with roughly 50 human demonstrations. We report success rate, averaged over 50
       rollouts per task, at training iteration 24k. All models use the same hyperparameters, and at inference depth slots
-      are fed as blank placeholders — <em class="term">the policy uses no depth sensor</em>.
+      are fed as blank placeholders, so <em class="term">the policy uses no depth sensor</em>.
     </p>
 
     <div class="table-scroll">
@@ -171,8 +171,8 @@
       </table>
     </div>
     <p class="tbl-note">
-      Crucially, ScanNet++ <em class="term">alone</em> — despite being out-of-distribution in-the-wild data with no robot
-      or action content — also improves success, showing that the geometric capability transfers across domains.
+      Crucially, ScanNet++ <em class="term">alone</em> also improves success, despite being out-of-distribution
+      in-the-wild data with no robot or action content. The geometric capability transfers across domains.
     </p>
 
     <h3>Per-task success rate</h3>
@@ -216,7 +216,7 @@
       </table>
     </div>
     <p class="tbl-note">
-      Per-task gains are consistent, with no task regressing below the baseline — and the mean improves even though depth
+      Per-task gains are consistent, with no task regressing below the baseline. The mean improves even though depth
       adds no information at test time, confirming that the benefit is a representation-level effect of co-training.
     </p>
 
@@ -248,7 +248,7 @@
     </div>
     <p class="tbl-note">
       RGB-only world-action training does not meaningfully improve the backbone's geometry, since its objective rewards
-      only 2D appearance. Depth supervision — and especially cheap-data mid-training — raises probe accuracy, and the
+      only 2D appearance. Depth supervision, and especially cheap-data mid-training, raises probe accuracy, and the
       probe ordering tracks the manipulation-success ordering.
     </p>
 
@@ -272,7 +272,7 @@
     </div>
     <p class="tbl-note">
       All signals contribute. <em class="term">Current-frame depth matters most</em>: removing it costs the largest drop,
-      whereas removing future-frame depth costs little. Depth is a useful target on its own — predicting only depth, with
+      whereas removing future-frame depth costs little. Depth is a useful target on its own: predicting only depth, with
       no RGB target, still reaches 66.5%, above the RGB-only baseline at 60.8%.
     </p>
   </section>
@@ -308,7 +308,7 @@
 <footer>
   <div class="wrap">
     <p>
-      Page under construction — content and results are subject to change.<br>
+      Page under construction. Content and results are subject to change.<br>
       KAIST Kim Jaechul Graduate School of AI ·
       <a href="https://junhahyung.github.io">Junha Hyung</a>
     </p>
