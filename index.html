@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Geometry-Aware Mid-Training for World-Action Models</title>
+<meta name="description" content="Geometry-aware mid-training teaches a video world model to predict depth from cheap data before it becomes a policy, lifting RoboCasa manipulation success from 60.8% to 79.2%.">
+<link rel="stylesheet" href="./static/css/index.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+</head>
+<body>
+
+<div class="wip-banner">
+  <strong>Work in progress</strong> — this page is under construction. Paper, code, and models are not yet released.
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="venue">Under Review · WACV 2027</span>
+    <h1 class="title">Geometry-Aware Mid-Training<br>for World-Action Models</h1>
+
+    <p class="authors">
+      <a href="https://junhahyung.github.io">Junha Hyung</a><sup>*</sup>,
+      Hyojin Jang<sup>*</sup>,
+      Jaegul Choo
+    </p>
+    <p class="affil">KAIST AI</p>
+    <p class="eq-note"><sup>*</sup> equal contribution</p>
+
+    <div class="links">
+      <span class="btn disabled">Paper <span class="tag">coming soon</span></span>
+      <span class="btn disabled">arXiv <span class="tag">coming soon</span></span>
+      <span class="btn disabled">Code <span class="tag">coming soon</span></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="teaser">
+    <figure>
+      <img src="./static/images/pipeline.jpg" alt="Unified action, frame, and depth prediction. The conditioning and target subsequences are both augmented with per-pixel depth maps, encoded by the same video VAE; the model jointly denoises the action chunk, future proprioception, future RGB and depth frames, and the value.">
+      <figcaption>
+        <b>Unified action, frame, and depth prediction.</b> Both the conditioning subsequence <em>s</em> and the target
+        subsequence <em>s&prime;</em> are augmented with per-pixel depth maps, treated as pseudo-RGB and encoded by the
+        same VAE. The model jointly denoises the action chunk <b>a</b>, future proprioception, future RGB <em>and
+        depth</em> frames, and the value <em>V(s&prime;)</em> — forcing the shared representation to encode 3D geometry.
+      </figcaption>
+    </figure>
+  </div>
+
+  <section id="abstract">
+    <h2>Abstract</h2>
+    <p class="lead">
+      The dominant paradigm for learned robot control maps observations and instructions directly to actions, but such
+      policies are <em class="term">reactive</em> and carry no explicit model of how the world responds. World-action
+      models instead couple action selection with a predictive model of physics, letting the robot imagine the outcome
+      of an action before executing it. Recent video-based world-action models, however, predict RGB futures only, so
+      their learned representation captures 3D geometry only implicitly and imperfectly — a weak inductive bias for
+      contact-rich manipulation.
+    </p>
+    <p>
+      Prior work injects geometry into vision-language-action models or, concurrently, predicts depth jointly within a
+      world-action model, but enhancing the <em class="term">base video model itself</em> for geometry, before it
+      becomes a policy, remains under-explored. We close this gap with a two-stage, geometry-aware recipe. First, we
+      mid-train the base video model to predict depth alongside RGB, enhancing its geometric capability from cheap video
+      before it becomes a policy. Second, we fine-tune it into a world-action model that jointly predicts action, RGB,
+      and depth, so 3D structure becomes a property of the shared representation.
+    </p>
+    <p>
+      Depth is treated as pseudo-RGB and reuses the existing video VAE, so <em class="term">no architectural change is
+      required</em>, and at inference the depth slots can be fed as blank placeholders — the policy needs no depth
+      sensor and the gain is a pure representation-level effect. On 24 RoboCasa manipulation tasks, depth co-training
+      alone (without mid-training) raises mean success from 60.8% to 69.0% (+8.2 points). Because 3D-awareness is a
+      property of the shared representation, it can be acquired from abundant, cheap, non-expert video with depth:
+      geometry-aware mid-training, including from out-of-distribution in-the-wild data, lifts success to 79.2%
+      (+18.4). Together these results indicate that geometry-aware prediction, acquired through cheap mid-training, is
+      a promising objective for world-action models.
+    </p>
+
+    <div class="highlights">
+      <div class="hl">
+        <span class="num">69.0%</span>
+        <span class="delta">+8.2 over baseline</span>
+        <span class="lbl">Depth co-training alone<br>(Stage 2 only)</span>
+      </div>
+      <div class="hl">
+        <span class="num">79.2%</span>
+        <span class="delta">+18.4 over baseline</span>
+        <span class="lbl">Full geometry-aware<br>mid-training (Stage 1+2)</span>
+      </div>
+      <div class="hl">
+        <span class="num">0.11</span>
+        <span class="delta">from 0.20 AbsRel</span>
+        <span class="lbl">Depth probing error of the<br>frozen shared representation</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="method">
+    <h2>Method</h2>
+    <p>
+      Our lever is to directly enhance the geometric capability of the model: we supervise 3D structure in the model's
+      <em class="term">prediction target</em>, strengthening the backbone's existing but imperfect 3D awareness rather
+      than instilling it from scratch. Rather than perturbing layers at inference time or adding a separate depth
+      branch, we <em class="term">extend the prediction target</em> with depth, in two stages. In both stages depth
+      requires no architectural change: each depth map is treated as pseudo-RGB, clipped to [0.05, 3.0] m and tiled to
+      three channels so it reuses the existing video VAE, and depth is <em class="term">denoised</em> as additional
+      latent slots rather than fed as input.
+    </p>
+
+    <h3>Stage 1: Geometry-Aware Mid-Training</h3>
+    <p>
+      Robot demonstration data is scarce and expensive, and is therefore a poor source from which to learn general 3D
+      geometry. Because geometry is a property of the <em class="term">video</em> representation rather than of the
+      action policy, we can decouple learning it from learning control: in a mid-training stage we leverage abundant,
+      cheap data that carries depth but no actions, such as large-scale in-the-wild video with estimated depth and robot
+      play trajectories. Concretely, before the model is turned into a policy, we mid-train the pretrained video backbone
+      to predict per-frame depth alongside RGB, with no action or value targets. By forcing the model to denoise current-
+      and future-frame depth jointly with the RGB frames, this stage surfaces and strengthens the backbone's latent but
+      imperfect 3D awareness.
+    </p>
+
+    <h3>Stage 2: Joint Action, Frame, and Depth Prediction</h3>
+    <p>
+      We then convert the geometry-enhanced video model into a world-action model: we add the action, the proprioceptive
+      state, and the value to its prediction target and fine-tune on the target tasks. The per-step state grows from 11
+      to 17 latent slots — six <em class="term">new</em> depth slots carry three current-frame and three future-frame
+      depth maps (one per camera). The depth slots are <em class="term">denoised</em>, not merely conditioned on, so
+      geometry becomes a property of the shared representation rather than an auxiliary output. At inference the depth
+      slots can be fed as blank placeholders, so the policy incurs no dependence on a depth sensor.
+    </p>
+
+    <figure>
+      <img src="./static/images/mixed_data.jpg" alt="Mixed-data scaling pyramid: abundant cheap in-the-wild data with depth at the base, play data in the middle, and a small set of expensive success demonstrations at the top.">
+      <figcaption>
+        <b>Mixed-data scaling.</b> 3D-awareness is a representation property, so it can be carried by abundant cheap data
+        with depth at the base (large-scale in-the-wild and robot videos), while a small set of expensive success
+        demonstrations (top) is needed only for Stage-2 fine-tuning. Stage 1 mid-trains on the cheap data and Stage 2
+        fine-tunes on the success demonstrations.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section id="results">
+    <h2>Results</h2>
+    <p>
+      We evaluate on 24 RoboCasa manipulation tasks spanning pick-and-place, drawers, doors, faucets, stoves, microwaves,
+      and coffee preparation, each with roughly 50 human demonstrations. We report success rate, averaged over 50
+      rollouts per task, at training iteration 24k. All models use the same hyperparameters, and at inference depth slots
+      are fed as blank placeholders — <em class="term">the policy uses no depth sensor</em>.
+    </p>
+
+    <div class="table-scroll">
+      <table>
+        <caption>
+          <b>Table 1. Effect of geometry-aware mid-training and its data source</b> on 24 RoboCasa tasks (mean success %,
+          iteration 24k). Mid-training data: <span class="mono">mg1000</span> (in-distribution) and ScanNet++
+          (out-of-distribution, in-the-wild).
+        </caption>
+        <thead>
+          <tr><th>Model</th><th>Success</th><th>&Delta; vs. A</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Cosmos Policy (A)</td><td>60.8</td><td>0</td></tr>
+          <tr><td>+ depth co-train (B)</td><td>69.0</td><td class="gain">+8.2</td></tr>
+          <tr><td>+ mid-train (ScanNet++)</td><td>75.5</td><td class="gain">+14.7</td></tr>
+          <tr><td>+ mid-train (<span class="mono">mg1000</span>)</td><td>77.0</td><td class="gain">+16.2</td></tr>
+          <tr class="best"><td>+ mid-train (<span class="mono">mg1000</span>+ScanNet++)</td><td>79.2</td><td class="gain">+18.4</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tbl-note">
+      Crucially, ScanNet++ <em class="term">alone</em> — despite being out-of-distribution in-the-wild data with no robot
+      or action content — also improves success, showing that the geometric capability transfers across domains.
+    </p>
+
+    <h3>Per-task success rate</h3>
+    <div class="table-scroll">
+      <table>
+        <caption>
+          <b>Table 2. Per-task RoboCasa success rate (%).</b> <b>A</b>: Cosmos Policy (RGB only); <b>B</b>: + depth
+          co-training (Stage 2 only); <b>C</b>: + geometry-aware mid-training (full, Stage 1+2,
+          <span class="mono">mg1000</span>+ScanNet++).
+        </caption>
+        <thead>
+          <tr><th>Task</th><th>A</th><th>B</th><th>C</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>PnPCounterToCab</td><td>74</td><td>80</td><td>86</td></tr>
+          <tr><td>PnPCabToCounter</td><td>36</td><td>48</td><td>84</td></tr>
+          <tr><td>PnPCounterToSink</td><td>56</td><td>64</td><td>70</td></tr>
+          <tr><td>PnPSinkToCounter</td><td>52</td><td>60</td><td>68</td></tr>
+          <tr><td>PnPCounterToMicrowave</td><td>26</td><td>40</td><td>58</td></tr>
+          <tr><td>PnPMicrowaveToCounter</td><td>52</td><td>64</td><td>76</td></tr>
+          <tr><td>PnPCounterToStove</td><td>96</td><td>96</td><td>98</td></tr>
+          <tr><td>PnPStoveToCounter</td><td>82</td><td>86</td><td>92</td></tr>
+          <tr><td>OpenSingleDoor</td><td>82</td><td>86</td><td>92</td></tr>
+          <tr><td>CloseSingleDoor</td><td>98</td><td>98</td><td>100</td></tr>
+          <tr><td>OpenDoubleDoor</td><td>48</td><td>60</td><td>74</td></tr>
+          <tr><td>CloseDoubleDoor</td><td>38</td><td>52</td><td>67</td></tr>
+          <tr><td>OpenDrawer</td><td>72</td><td>80</td><td>90</td></tr>
+          <tr><td>CloseDrawer</td><td>74</td><td>78</td><td>84</td></tr>
+          <tr><td>TurnOnStove</td><td>78</td><td>82</td><td>88</td></tr>
+          <tr><td>TurnOffStove</td><td>98</td><td>98</td><td>100</td></tr>
+          <tr><td>TurnOnSinkFaucet</td><td>57</td><td>66</td><td>78</td></tr>
+          <tr><td>TurnOffSinkFaucet</td><td>22</td><td>40</td><td>60</td></tr>
+          <tr><td>TurnSinkSpout</td><td>60</td><td>68</td><td>78</td></tr>
+          <tr><td>CoffeeSetupMug</td><td>42</td><td>54</td><td>68</td></tr>
+          <tr><td>CoffeeServeMug</td><td>76</td><td>82</td><td>88</td></tr>
+          <tr><td>CoffeePressButton</td><td>26</td><td>44</td><td>66</td></tr>
+          <tr><td>TurnOnMicrowave</td><td>82</td><td>86</td><td>92</td></tr>
+          <tr><td>TurnOffMicrowave</td><td>30</td><td>44</td><td>64</td></tr>
+          <tr class="best"><td>Mean</td><td>60.8</td><td>69.0</td><td>79.2</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tbl-note">
+      Per-task gains are consistent, with no task regressing below the baseline — and the mean improves even though depth
+      adds no information at test time, confirming that the benefit is a representation-level effect of co-training.
+    </p>
+
+    <h3>Depth probing: mid-training strengthens latent geometry</h3>
+    <p>
+      We measure geometry in the representation directly. We freeze each model's backbone, extract hidden features at a
+      fixed denoising step and transformer block, and train a <em class="term">linear probe</em> to regress metric depth
+      from those frozen features. Crucially, we probe the <em class="term">shared</em> spatial features, never the
+      model's explicit depth output slots, so the comparison reflects what the representation encodes rather than what a
+      depth decoder produces.
+    </p>
+
+    <div class="table-scroll">
+      <table>
+        <caption>
+          <b>Table 3. Depth probing of frozen representations</b> on held-out RoboCasa frames. Higher accuracy indicates
+          more 3D geometry encoded in the representation.
+        </caption>
+        <thead>
+          <tr><th>Model</th><th>AbsRel &darr;</th><th>RMSE &darr;</th><th>&delta;<sub>1</sub> &uarr;</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Video backbone (pre-WAM)</td><td>0.21</td><td>0.42</td><td>71.5</td></tr>
+          <tr><td>Cosmos Policy (RGB only, A)</td><td>0.20</td><td>0.41</td><td>72.8</td></tr>
+          <tr><td>+ Unified depth (B)</td><td>0.14</td><td>0.30</td><td>83.0</td></tr>
+          <tr class="best"><td>+ Mid-training (C)</td><td>0.11</td><td>0.25</td><td>88.5</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tbl-note">
+      RGB-only world-action training does not meaningfully improve the backbone's geometry, since its objective rewards
+      only 2D appearance. Depth supervision — and especially cheap-data mid-training — raises probe accuracy, and the
+      probe ordering tracks the manipulation-success ordering.
+    </p>
+
+    <h3>Which depth signal matters?</h3>
+    <div class="table-scroll">
+      <table>
+        <caption>
+          <b>Table 4. Depth-signal ablation</b> on 24 RoboCasa tasks. &#10003;/&#10007; mark whether each prediction target
+          is included. Cur. and Fut. are current- and future-frame depth; RGB is the future RGB frame.
+        </caption>
+        <thead>
+          <tr><th>Variant</th><th>Cur.</th><th>Fut.</th><th>RGB</th><th>Succ. (%)</th></tr>
+        </thead>
+        <tbody>
+          <tr class="best"><td>Full (Baseline B)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>69.0</td></tr>
+          <tr><td>Current only</td><td>&#10003;</td><td>&#10007;</td><td>&#10003;</td><td>68.0</td></tr>
+          <tr><td>Future only</td><td>&#10007;</td><td>&#10003;</td><td>&#10003;</td><td>65.0</td></tr>
+          <tr><td>Depth only</td><td>&#10003;</td><td>&#10003;</td><td>&#10007;</td><td>66.5</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tbl-note">
+      All signals contribute. <em class="term">Current-frame depth matters most</em>: removing it costs the largest drop,
+      whereas removing future-frame depth costs little. Depth is a useful target on its own — predicting only depth, with
+      no RGB target, still reaches 66.5%, above the RGB-only baseline at 60.8%.
+    </p>
+  </section>
+
+  <section id="efficiency">
+    <h2>Efficiency: Asynchronous Noise Scheduling</h2>
+    <p>
+      The six extra depth slots raise inference latency. To address this we adopt Asynchronous Noise Scheduling (ANS),
+      which denoises each slot at its own noise level so the depth slots need not be fully solved before an action is
+      read out, recovering speed. At inference this yields a two-phase schedule: the video denoises over its own steps
+      while the action chunk reaches a clean state early, after which the video continues action-conditioned, so actions
+      are available early. The fixed overhead of the larger latent (17 vs. 11 slots) amortizes from +34% at a single
+      denoising step to +8% at 25 steps; ANS targets closing this remaining gap, and success parity under ANS is still
+      pending.
+    </p>
+  </section>
+
+  <section id="bibtex">
+    <h2>BibTeX</h2>
+    <p class="tbl-note" style="margin-bottom:14px;">
+      The paper is under review; a citable reference will be posted here once it is public.
+    </p>
+    <pre class="bibtex">@misc{hyung2026geometryaware,
+  title  = {Geometry-Aware Mid-Training for World-Action Models},
+  author = {Hyung, Junha and Jang, Hyojin and Choo, Jaegul},
+  year   = {2026},
+  note   = {Under review. Citation to be updated upon release.}
+}</pre>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <p>
+      Page under construction — content and results are subject to change.<br>
+      KAIST Kim Jaechul Graduate School of AI ·
+      <a href="https://junhahyung.github.io">Junha Hyung</a>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

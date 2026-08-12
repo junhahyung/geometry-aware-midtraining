@@ -1,0 +1,348 @@
+/* Geometry-Aware Mid-Training for World-Action Models — project page */
+
+:root {
+  --ink: #1f2328;
+  --ink-soft: #4a5158;
+  --ink-faint: #7d858c;
+  --rule: #e3e6ea;
+  --bg: #ffffff;
+  --bg-soft: #f7f8fa;
+  --accent: #1f6feb;
+  --accent-soft: #e8f0fe;
+  --wip: #b45309;
+  --wip-bg: #fff7ed;
+  --wip-rule: #fed7aa;
+  --maxw: 900px;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Charter", "Bitstream Charter", "Source Serif Pro", Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ---------- work-in-progress banner ---------- */
+
+.wip-banner {
+  background: var(--wip-bg);
+  border-bottom: 1px solid var(--wip-rule);
+  color: var(--wip);
+  text-align: center;
+  padding: 10px 24px;
+  font-size: 0.86rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.wip-banner strong {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  margin-right: 0.5em;
+}
+
+/* ---------- title block ---------- */
+
+header.hero {
+  text-align: center;
+  padding: 56px 0 28px;
+  border-bottom: 1px solid var(--rule);
+}
+
+h1.title {
+  font-size: 2.3rem;
+  line-height: 1.25;
+  font-weight: 700;
+  margin: 0 0 22px;
+  letter-spacing: -0.015em;
+}
+
+.venue {
+  display: inline-block;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--wip);
+  background: var(--wip-bg);
+  border: 1px solid var(--wip-rule);
+  border-radius: 999px;
+  padding: 5px 14px;
+  margin-bottom: 22px;
+}
+
+.authors {
+  font-size: 1.06rem;
+  margin: 0 0 6px;
+  color: var(--ink);
+}
+
+.authors a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule); }
+.authors a:hover { border-bottom-color: var(--accent); color: var(--accent); }
+
+.affil {
+  font-size: 0.96rem;
+  color: var(--ink-soft);
+  margin: 0 0 4px;
+}
+
+.eq-note {
+  font-size: 0.86rem;
+  color: var(--ink-faint);
+  margin: 0;
+}
+
+/* ---------- link buttons ---------- */
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 26px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 9px 20px;
+  border-radius: 999px;
+  text-decoration: none;
+  background: var(--ink);
+  color: #fff;
+  border: 1px solid var(--ink);
+  transition: opacity 0.15s ease;
+}
+
+.btn:hover { opacity: 0.82; }
+
+.btn.disabled {
+  background: var(--bg-soft);
+  color: var(--ink-faint);
+  border-color: var(--rule);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn .tag {
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+/* ---------- sections ---------- */
+
+section { padding: 44px 0; border-bottom: 1px solid var(--rule); }
+section:last-of-type { border-bottom: none; }
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 18px;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: 1.12rem;
+  font-weight: 700;
+  margin: 30px 0 10px;
+}
+
+p { margin: 0 0 16px; }
+p:last-child { margin-bottom: 0; }
+
+.lead { font-size: 1.02rem; }
+
+em.term { font-style: italic; }
+
+code, .mono {
+  font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--bg-soft);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+/* ---------- figures ---------- */
+
+figure { margin: 26px 0; }
+
+figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: #fff;
+}
+
+figcaption {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  line-height: 1.55;
+  margin-top: 12px;
+}
+
+figcaption b { color: var(--ink); }
+
+/* teaser sits full-bleed-ish under the header */
+.teaser { margin: 0; padding: 38px 0 0; }
+.teaser figure { margin-top: 0; }
+
+/* ---------- highlight numbers ---------- */
+
+.highlights {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin: 26px 0 8px;
+}
+
+.hl {
+  background: var(--bg-soft);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 18px 16px;
+  text-align: center;
+}
+
+.hl .num {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.hl .delta {
+  display: block;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #15803d;
+  margin-top: 3px;
+}
+
+.hl .lbl {
+  display: block;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  margin-top: 7px;
+  line-height: 1.4;
+}
+
+/* ---------- tables ---------- */
+
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 20px 0 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 0.87rem;
+  white-space: nowrap;
+}
+
+caption {
+  caption-side: top;
+  text-align: left;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  padding-bottom: 12px;
+  white-space: normal;
+  line-height: 1.55;
+}
+
+caption b { color: var(--ink); }
+
+th, td {
+  padding: 8px 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--rule);
+}
+
+th:first-child, td:first-child { text-align: left; }
+
+thead th {
+  border-top: 1.5px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+tbody tr:last-child td { border-bottom: 1.5px solid var(--ink); }
+
+tr.best td { font-weight: 700; background: var(--accent-soft); }
+
+td.gain { color: #15803d; font-weight: 600; }
+
+.tbl-note {
+  font-size: 0.84rem;
+  color: var(--ink-faint);
+  margin-top: 4px;
+}
+
+/* ---------- bibtex ---------- */
+
+pre.bibtex {
+  background: var(--bg-soft);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 18px 20px;
+  overflow-x: auto;
+  font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.84rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+/* ---------- footer ---------- */
+
+footer {
+  padding: 34px 0 56px;
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 0.84rem;
+  color: var(--ink-faint);
+  line-height: 1.7;
+}
+
+footer a { color: var(--ink-faint); }
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 700px) {
+  body { font-size: 16px; }
+  h1.title { font-size: 1.65rem; }
+  h2 { font-size: 1.3rem; }
+  header.hero { padding-top: 36px; }
+  .highlights { grid-template-columns: 1fr; }
+}
